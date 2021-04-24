@@ -1,4 +1,4 @@
-name: softlearning
+name: viceraq
 channels:
 - defaults
 - conda-forge

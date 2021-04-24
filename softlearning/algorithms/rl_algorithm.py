@@ -29,6 +29,7 @@ class RLAlgorithm(tf.contrib.checkpoint.Checkpointable):
             max_train_repeat_per_timestep=5,
             n_initial_exploration_steps=0,
             initial_exploration_policy=None,
+            # epoch_length=1000,
             epoch_length=1000,
             eval_n_episodes=10,
             eval_deterministic=True,
@@ -171,13 +172,18 @@ class RLAlgorithm(tf.contrib.checkpoint.Checkpointable):
         self._training_before_hook()
 
         for self._epoch in gt.timed_for(range(self._epoch, self._n_epochs)):
+            print('starting epoch', self._epoch)
             self._epoch_before_hook()
             gt.stamp('epoch_before_hook')
 
             start_samples = self.sampler._total_samples
+            print('start samples', start_samples)
             for i in count():
                 samples_now = self.sampler._total_samples
+                # print('samples now', samples_now)
                 self._timestep = samples_now - start_samples
+                if (- samples_now + (start_samples + self._epoch_length)) % 100 == 0:
+                    print('samples needed',  - samples_now + (start_samples + self._epoch_length))
 
                 if (samples_now >= start_samples + self._epoch_length
                     and self.ready_to_train):
@@ -195,6 +201,8 @@ class RLAlgorithm(tf.contrib.checkpoint.Checkpointable):
 
                 self._timestep_after_hook()
                 gt.stamp('timestep_after_hook')
+
+            print('after hook', self._epoch)
 
             training_paths = self.sampler.get_last_n_paths(
                 math.ceil(self._epoch_length / self.sampler._max_path_length))
